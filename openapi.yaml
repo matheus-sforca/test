@@ -1,0 +1,354 @@
+openapi: 3.0.0
+info:
+  title: "API Client Wifi"
+  description: "API responsável por obter SSID e SENHA do equipamento Wifi e também altera-los
+  <table><thead><tr><th>Versão</th><th>Elaborado por</th><th>Data</th><th>Alterações</th></tr></thead><tbody><tr><td>1.0.0</td><td>Marcos Maciel</td><td>2021-08-13</td><td>[MCR Atendimento Técnico] Versão Inicial</td></tr></tbody></table>"
+  version: "2;2021-08-13"
+  x-claro-domains:
+    - Customer
+    - Service Inventory
+servers:
+  - url: https://api-lab.claro.com.br/residential/api/v1/client-wifi
+    description: lab
+  - url: https://api-homolog.claro.com.br/residential/api/v1/client-wifi
+    description: hml
+  - url: https://api.claro.com.br/residential/api/v1/client-wifi
+    description: prod
+tags:
+  - name: wifi-controller
+    description: Wifi Controller
+paths:
+  "/all":
+    get:
+      tags:
+        - wifi-controller
+      summary: "Returns a list of wifi equipments linked to the customer's contract. The return also contains ssid information about the routers and includes data about the wifi type (2.4G, Both, ...). Backends: Contract Identifier Products V2, Gerencia Remota"
+      security:
+        - ApiKeyAuth: []
+      operationId: listEquipmentByContractUsingGET
+      responses:
+        "202":
+          description: <strong>Accepted</strong>
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WifiContractResponse"               
+        '401':
+          description: <strong>Unauthorized</strong>
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+              example:
+                error:
+                  code: UNAUTHORIZED
+                  message: Unauthorized
+                  date: "2021-05-27T14:50:29.088-03:00"
+        "403":
+          description: <strong>Forbidden</strong>
+            <ul><li><strong>INTERNET_NOT_CONTRACTED</strong> - Você não possui pacote de internet contratado.</li>
+            </ul>
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+              example:
+                error:
+                  code: INTERNET_NOT_CONTRACTED
+                  message: Você não possui pacote de internet contratado.
+                  date: "2021-05-27T14:50:29.088-03:00"
+            application:
+              schema:
+                $ref: '#/components/schemas/error'                    
+        "404":
+          description: <strong>Not found</strong>
+            <ul><li><strong>RESPONSE_MSG_MODEM_NOT_FOUND</strong> - Não foi possível consultar as informações do seu equipamento. Por favor tente novamente mais tarde!</li>
+            <li><strong>RESPONSE_MSG_NO_WIFI</strong> -O seu pacote de internet da NET não possui WI-FI. Caso possua um roteador e queira configurá-lo, consulte o manual do fabricante.</li>
+            <li><strong>RESPONSE_MSG_GPON_UNAVAILABLE</strong> - Desculpe-nos. Essa Funcionalidade ainda não está disponível para a sua cidade.</li></ul>
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+              example:
+                error:
+                  code: RESPONSE_MSG_GPON_UNAVAILABLE
+                  message: Desculpe-nos. Essa Funcionalidade ainda não está disponível para a sua cidade.
+                  date: "2021-05-27T14:50:29.088-03:00"
+            application:
+              schema:
+                $ref: '#/components/schemas/error'
+        "500":
+          description: <strong>Internal Server Error</strong>
+            <br/><br/>
+            <strong>UNEXPECTED_ERROR</strong> - Erros inesperados como por exemplo
+            <li>Erro ao fazer parse do xml do response do gerencia remota</li></ul>
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+              example:
+                error:
+                  code: UNEXPECTED_ERROR
+                  message: "Erro ao fazer parse do xml do response do gerencia remota."
+                  date: "2021-05-27T14:50:29.088-03:00"
+            application:
+              schema:
+                $ref: '#/components/schemas/error'
+        "503":
+          description: <strong>Service Unavailable</strong>
+            <ul><li><strong>CONNECTION_RESET</strong> - Não foi possível obter informações do equipamento. Por favor tente novamente mais tarde!.</li>
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+              example:
+                error:
+                  code: CONNECTION_RESET
+                  message:  Não foi possível obter informações do equipamento. Por favor tente novamente mais tarde!.
+                  date: "2021-05-27T14:50:29.088-03:00"
+            application:
+              schema:
+                $ref: '#/components/schemas/error'
+      deprecated: false
+  "/{mac}/{model}":
+    put:
+      tags:
+        - wifi-controller
+      summary: "Update router credential settings, depending on the request body. May update both the 2.4 and 5.0G networks or a single one. Returns a protocol if the operation is successful. Backends: Contract Identifier Products V2, Gerencia Remota, GerarProtocoloAtendimento12"
+      security:
+        - ApiKeyAuth: []
+      operationId: updateRouterUsingPUT
+      parameters:
+        - name: mac
+          in: path
+          description: mac do equipamento
+          required: true
+          schema:
+            type: string
+        - name: model
+          in: path
+          description: modelo do roteador
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RouterUpdateRequest"
+        description: router
+        required: true
+      responses:
+        "202":
+          description: <strong>Accepted</strong>
+          content:
+            application/json:
+              schema:
+                  $ref: "#/components/schemas/RouterUpdateResponse"
+        "400":
+          description: <strong>Bad Request</strong>
+            <ul><li><strong>RESPONSE_MSG_INVALID_SSID_OR_PASS</strong> - Os campos SSID ou senha devem ter de 8 a 20 caracteres pertencentes à tabela ASCII e não pode conter espaços.</li>
+            <li><strong>CLASS_TYPE_ERROR</strong> - O tipo da classe para deserializar o response não foi mapeado.</li>
+            </ul>
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+              example:
+                error:
+                  code: RESPONSE_MSG_INVALID_SSID_OR_PASS
+                  message: Os campos SSID ou senha devem ter de 8 a 20 caracteres pertencentes à tabela ASCII e não pode conter espaços.
+                  date: "2021-05-27T14:50:29.088-03:00"
+            application:
+              schema:
+                $ref: '#/components/schemas/error'    
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+              example:
+                error:
+                  code: UNAUTHORIZED
+                  message: Unauthorized
+                  date: "2021-05-27T14:50:29.088-03:00"
+        "500":
+          description: <strong>Internal Server Error</strong>
+            <br/><br/>
+            <strong>UNEXPECTED_ERROR</strong> - Erros inesperados como por exemplo
+            <ul><li>Falha ao tentar recuperar produtos do contrato</li>
+            <li>Falha ao obter informações do equipamento Wi-fi</li>
+            <li>Erro ao fazer parse do xml do response do gerencia remota</li></ul>
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+              example:
+                error:
+                  code: UNEXPECTED_ERROR
+                  message: "Não foi possível recuperar produtos do contrato."
+                  date: "2021-05-27T14:50:29.088-03:00"
+            application:
+              schema:
+                $ref: '#/components/schemas/error'
+        "503":
+          description: Service Unavailable
+            <ul><li><strong>CONNECTION_RESET</strong> - Não foi possível obter informações do equipamento. Por favor tente novamente mais tarde!.</li>
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+              example:
+                error:
+                  code: CONNECTION_RESET
+                  message:  Não foi possível obter informações do equipamento. Por favor tente novamente mais tarde!.
+                  date: "2021-05-27T14:50:29.088-03:00"
+            application:
+              schema:
+                $ref: '#/components/schemas/error'            
+
+      deprecated: false
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-client-key
+  schemas:
+    Fields:
+        type: object
+        properties:
+          field:
+            type: string
+          message:
+            type: string
+          status:
+            type: boolean
+        title: Fields
+        example:
+          field: ssid2
+          message: Sucesso
+          status: true
+    Protocol:
+      type: object
+      properties:
+        call:
+          type: string
+        number:
+          type: string
+      title: Protocol
+      example:
+        call: "313077746"
+        protocol: "806212971688319"
+    RouterSendEmail:
+      type: object
+      properties:
+        email:
+          type: string
+          description: E-mail to sender
+        password:
+          type: string
+        ssid:
+          type: string
+      title: RouterSendEmail
+    RouterUpdateRequest:
+      type: object
+      properties:
+        password:
+          type: string
+          description: password channel 2.4
+        password5:
+          type: string
+          description: password channel 5.0
+        ssid:
+          type: string
+          description: ssid channel 2.4
+        ssid5:
+          type: string
+          description: ssid channel 5.0
+      title: RouterUpdateRequest
+    RouterUpdateResponse:
+      type: object
+      properties:
+        fields:
+          type: array
+          description: fields
+          items:
+            $ref: '#/components/schemas/Fields'
+        protocol:
+          description: protocol
+          $ref: '#/components/schemas/Protocol'
+      title: RouterUpdateResponse
+    WifiContractResponse:
+      type: object
+      properties:
+        mac:
+          type: string
+          description: router's mac address
+        ip:
+          type: string
+          description: router's ip address
+        model:
+          type: string
+          description: router's model
+        status:
+          type: string
+          description: route  
+        vendor:
+          type: string
+          description: route  
+        ssid:
+          type: string
+          description: ssid channel 2.4
+        ssid5:
+          type: string
+        visiblePassword:
+          type: boolean
+          description: assword visibility
+        wifiType: 
+          type: string
+          enum:
+            - 2.4GHZ
+            - BOTH
+            - STEERING
+      title: WifiContractResponse
+      example:
+          mac: "942CB3BD7E8A"
+          ip: "10.200.56.8"
+          model: "HGA12R-02"
+          status: "Online"
+          vendor: "ARRIS Group, Inc."
+          ssid: "Family Silva"
+          ssid5: "Family Silva 5G"
+          visiblePassword: true
+          wifiType: BOTH
+    error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              enum:
+                - UNEXPECTED_ERROR
+                - UNAUTHORIZED
+                - CLASS_TYPE_ERROR
+                - RESPONSE_MSG_NO_WIFI
+                - CONNECTION_RESET
+                - RESPONSE_MSG_MODEM_NOT_FOUND
+                - RESPONSE_MSG_GPON_UNAVAILABLE
+                - RESPONSE_MSG_INVALID_SSID_OR_PASS
+                - INVALID_EMAIL
+                - SERVICE_FAIL_MESSAGE
+                - SERVICE_UNAVAILABLE_MESSAGE
+              description: Código de erro interno da API
+            message:
+              type: string
+              description: Mensagem de erro  
+            date:
+              type: string
+              description: "data e hora da ocorrência do erro"
