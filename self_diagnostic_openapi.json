@@ -1,0 +1,343 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "API Self Diagnostic",
+    "description": "API de Auto Diagnóstico  <table><thead><tr><th>Versão</th><th>Elaborado por</th><th>Data</th><th>Alterações</th></tr></thead><tbody><tr><td>1.1.0</td><td>Matheus Sforça</td><td>2021-09-13</td><td>[MCR Atendimento Técnico] Versão Inicial</td></tr></tbody></table>",
+    "version": "1;2021-08-13",
+    "x-claro-domains": [
+      "Customer"
+    ]
+  },
+  "servers": [
+    {
+      "url": "https://api-lab.claro.com.br/residential/v1/self-diagnostic",
+      "description": "lab"
+    },
+    {
+      "url": "https://api-homolog.claro.com.br/residential/v1/self-diagnostic",
+      "description": "hml"
+    },
+    {
+      "url": "https://api.claro.com.br/residential/v1/self-diagnostic",
+      "description": "prod"
+    }
+  ],
+  "paths": {
+    "/tips": {
+      "get": {
+        "tags": [
+          "Self Diagnostic"
+        ],
+        "summary": "Get tips to help the user to solve his problem related to product outage / instability. Backend: None",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "operationId": "getTipsGET",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TipsResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          },
+          "503": {
+            "$ref": "#/components/responses/503"
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/validate/{codeType}/{product}": {
+      "get": {
+        "tags": [
+          "Self Diagnostic"
+        ],
+        "summary": "Validate if a customer product is eligible to open a diagnostic of a given code type can be open. Backends: AWS Outage Service, AWS Service Order Service",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "operationId": "getValidate",
+        "parameters": [
+          {
+            "name": "codeType",
+            "in": "path",
+            "description": "codeType",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "product",
+            "in": "path",
+            "description": "product",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "NET VIRTUA",
+                "NET TV",
+                "NET FONE",
+                "CELULAR",
+                "SERVICOS_ADICIONAIS",
+                "NOW"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          },
+          "503": {
+            "$ref": "#/components/responses/503"
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/status": {
+      "get": {
+        "tags": [
+          "Self Diagnostic"
+        ],
+        "summary": "Validate if the user status is connected, returning 202 if it is connected or 4xx or 5xx status otherwise. Backends: None",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "operationId": "getStatus",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          },
+          "503": {
+            "$ref": "#/components/responses/503"
+          }
+        },
+        "deprecated": false
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-client-key"
+      }
+    },
+    "schemas": {
+      "error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string",
+                "enum": [
+                  "SELECTED_PRODUCT_NOT_FOUND",
+                  "DISCONNECTED_USER",
+                  "VT_ALREADY_OPEN",
+                  "OUTAGE_OPEN",
+                  "NOT_FOUND"
+                ],
+                "description": "Código de erro interno da API"
+              },
+              "message": {
+                "type": "string",
+                "description": "Mensagem de erro"
+              }
+            }
+          }
+        }
+      },
+      "TipsResponse": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "título da dica",
+            "example": "Wifi"
+          },
+          "description": {
+            "type": "string",
+            "description": "descrição da dica",
+            "example": "Se tiver um problema com sua internet e possuir um roteador pessoal, desligue ele da tomada, aguarde 10 segundos e ligue-o novamente."
+          }
+        },
+        "title": "TipsResponse"
+      }
+    },
+    "responses": {
+      "400": {
+        "description": "Bad Request",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/error"
+            }
+          }
+        }
+      },
+      "401": {
+        "description": "Unauthorized",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/error"
+            },
+            "example": {
+              "error": {
+                "code": "UNAUTHORIZED",
+                "message": "Unauthorized"
+              }
+            }
+          }
+        }
+      },
+      "403": {
+        "description": "<strong>Forbidden </strong> <ul> <li><strong>SELECTED_PRODUCT_NOT_FOUND</strong> - O erro ocorre quando o usuário não tem o produto selecionado</li> <li><strong>DISCONNECTED_USER</strong> - O erro ocorre quando o usuário não tem permissão para executar a operação pois esta desconectado</li> <li><strong>VT_ALREADY_OPEN</strong> - O erro ocorre quando já existe uma VT aberta para aquele problema ou solicitação</li> <li><strong>IE_ALREADY_OPEN</strong> - O erro ocorre quando já existe uma IE aberta para aquele problema ou solicitação</li> <li><strong>OUTAGE_OPEN</strong> - O Erro ocorre o cliente tem um outage aberto</li> </ul>",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/error"
+            },
+            "example": {
+              "error": {
+                "code": "[SELECTED_PRODUCT_NOT_FOUND, DISCONNECTED_USER, VT_ALREADY_OPEN, OUTAGE_OPEN]",
+                "message": "string"
+              }
+            }
+          },
+          "application": {
+            "schema": {
+              "$ref": "#/components/schemas/error"
+            }
+          }
+        }
+      },
+      "404": {
+        "description": "Not Found",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/error"
+            },
+            "example": {
+              "error": {
+                "code": "NOT_FOUND",
+                "message": "The result is empty"
+              }
+            }
+          },
+          "application": {
+            "schema": {
+              "$ref": "#/components/schemas/error"
+            }
+          }
+        }
+      },
+      "500": {
+        "description": "Internal Server Error",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/error"
+            },
+            "example": {
+              "error": {
+                "code": "INTERNAL_SERVER_ERROR",
+                "message": "Internal Server Error"
+              }
+            }
+          },
+          "application": {
+            "schema": {
+              "$ref": "#/components/schemas/error"
+            }
+          }
+        }
+      },
+      "503": {
+        "description": "Service unavailable",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/error"
+            },
+            "example": {
+              "error": {
+                "code": "SERVICE_UNAVAILABLE",
+                "message": "Service Unavailable"
+              }
+            }
+          },
+          "application": {
+            "schema": {
+              "$ref": "#/components/schemas/error"
+            }
+          }
+        }
+      }
+    }
+  }
+}
