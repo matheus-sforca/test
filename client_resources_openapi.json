@@ -1,0 +1,541 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "API Client Resources",
+    "description": "API de Client Resources (Diagnóstico e Pontos dos Equipamentos) <table><thead><tr><th>Versão</th><th>Elaborado por</th><th>Data</th><th>Alterações</th></tr></thead><tbody><tr><td>1.0.0</td><td>Matheus Sforça</td><td>2021-11-03</td><td>[MCR Atendimento Técnico] Versão Inicial</td></tr></tbody></table>",
+    "version": "1;2020-10-19",
+    "x-claro-domains": [
+      "Customer"
+    ]
+  },
+  "tags": [
+    {
+      "name": "Client Resources",
+      "description": "Client Resources"
+    }
+  ],
+  "servers": [
+    {
+      "url": "https://api-lab.claro.com.br/residential/v1/client-resources",
+      "description": "lab"
+    },
+    {
+      "url": "https://api-homolog.claro.com.br/residential/v1/client-resources",
+      "description": "hml"
+    },
+    {
+      "url": "https://api.claro.com.br/residential/v1/client-resources",
+      "description": "prod"
+    }
+  ],
+  "security": [
+    {
+      "ApiKeyAuth": []
+    },
+    {
+      "BearerAuth": []
+    }
+  ],
+  "paths": {
+    "/diagnostic/{productType}/{reasonCode}": {
+      "get": {
+        "tags": [
+          "Client Resources"
+        ],
+        "summary": "Verifica o auto-diagnóstico a ser seguido pelo cliente com base no produto e no motivo do problema. Backends: Contract-Identifier, Diagnostico12V1",
+        "operationId": "getDiagnosticUsingGET",
+        "parameters": [
+          {
+            "name": "productType",
+            "in": "path",
+            "description": "productType",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "INTERNET",
+                "TV",
+                "FONE",
+                "CELULAR",
+                "SERVICOS_ADICIONAIS",
+                "NOW"
+              ]
+            }
+          },
+          {
+            "name": "reasonCode",
+            "in": "path",
+            "required": true,
+            "description": "ID do motivo do problema relacionado a tabela de reason (ver mais em API Service Order - order-reason-controller)",
+            "example": "19",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DiagnosticResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          },
+          "503": {
+            "$ref": "#/components/responses/503"
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/hit": {
+      "post": {
+        "tags": [
+          "Client Resources"
+        ],
+        "summary": "Envia um HIT para o ponto passado na requisição, com o objetivo de tentar resolver os problemas técnicos. Backends: IncluirOCManutencao12V1, Contract-Identifier, ListarPontoContrato",
+        "operationId": "sendHitUsingPOST",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/HitResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          },
+          "503": {
+            "$ref": "#/components/responses/503"
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/point/{productType}": {
+      "get": {
+        "tags": [
+          "Client Resources"
+        ],
+        "summary": "Retorna o ponto principal do cliente com base no produto passado requisitado. Backends: Contract-Identifier, ListarPontoContrato",
+        "operationId": "getMainPointUsingGET",
+        "parameters": [
+          {
+            "name": "productType",
+            "in": "path",
+            "description": "productType",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "INTERNET",
+                "TV",
+                "FONE",
+                "CELULAR",
+                "SERVICOS_ADICIONAIS",
+                "NOW"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PointResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          },
+          "503": {
+            "$ref": "#/components/responses/503"
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/all/point/{productType}": {
+      "get": {
+        "tags": [
+          "Client Resources"
+        ],
+        "summary": "Retorna todos os pontos dos equipamentos do cliente para um determinado produto. Backends: Contract-Identifier, ListarPontoContrato",
+        "operationId": "getAllPointUsingGET",
+        "parameters": [
+          {
+            "name": "productType",
+            "in": "path",
+            "description": "productType",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "INTERNET",
+                "TV",
+                "FONE",
+                "CELULAR",
+                "SERVICOS_ADICIONAIS",
+                "NOW"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PointFullResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          },
+          "503": {
+            "$ref": "#/components/responses/503"
+          }
+        },
+        "deprecated": false
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-client-key"
+      },
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "Idm Token"
+      }
+    },
+    "schemas": {
+      "error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string",
+                "enum": [
+                  "SELECTED_PRODUCT_NOT_FOUND",
+                  "POINT_ID_NOT_FOUND",
+                  "OS_CODE_NOT_FOUND",
+                  "DISCONNECTED_USER",
+                  "VT_ALREADY_OPEN",
+                  "OUTAGE_OPEN",
+                  "NOT_FOUND"
+                ],
+                "description": "Código de erro interno da API"
+              },
+              "message": {
+                "type": "string",
+                "description": "Mensagem de erro"
+              }
+            }
+          }
+        }
+      },
+      "PointResponse": {
+        "type": "object",
+        "properties": {
+          "mainAddress": {
+            "type": "string",
+            "description": "identifcador do aparelho",
+            "example": 12312312312
+          },
+          "pointId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "identificador do ponto",
+            "example": 12312
+          }
+        },
+        "title": "PointResponse"
+      },
+      "PointFullResponse": {
+        "type": "object",
+        "properties": {
+          "pointId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "identificador do ponto",
+            "example": 12312
+          },
+          "description": {
+            "type": "string",
+            "description": "descrição do aparelho",
+            "example": "DECODER DIGITA"
+          },
+          "modelDescription": {
+            "type": "string",
+            "description": "descrição do modelo",
+            "example": "DECODER HD THDC4"
+          },
+          "mac": {
+            "type": "string",
+            "description": "mac do aparelho",
+            "example": 229663727090
+          }
+        },
+        "title": "PointFullResponse"
+      },
+      "DiagnosticResponse": {
+        "type": "object",
+        "properties": {
+          "diagnosticType": {
+            "type": "string",
+            "description": "tipo de diagnóstico executado",
+            "example": "MULTI_PARAMETRO ou AUTO_DIAGNOSTICO"
+          },
+          "procedure": {
+            "type": "string",
+            "description": "procedimento que o cliente deverá executar",
+            "example": "RESET"
+          },
+          "returned": {
+            "type": "string",
+            "description": "código do auto diagnóstico",
+            "example": 0
+          },
+          "description": {
+            "type": "string",
+            "description": "descrição do auto diagnóstico",
+            "example": "Cliente - Sinais ok, histórico ok"
+          },
+          "feefree": {
+            "type": "boolean",
+            "description": "identifica se permite uma abertura de VT com pagamento isento ou não",
+            "example": false
+          }
+        },
+        "title": "DiagnosticResponse"
+      },
+      "HitResponse": {
+        "type": "object",
+        "properties": {
+          "pointId": {
+            "type": "string",
+            "description": "ponto que foi executado o hit",
+            "example": 9373685
+          },
+          "success": {
+            "type": "boolean",
+            "description": "se o hit foi executado",
+            "example": true
+          },
+          "ocCode": {
+            "type": "string",
+            "description": "código da Os",
+            "example": 322998471
+          },
+          "solicitationId": {
+            "type": "string",
+            "description": "identificador da solicitação",
+            "example": 475115725
+          },
+          "description": {
+            "type": "string",
+            "description": "descrição do aparelho que o hit foi executado",
+            "example": "SMART SIM CARD NAGRA"
+          }
+        },
+        "title": "HitResponse"
+      }
+    },
+    "responses": {
+      "400": {
+        "description": "Bad Request",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/error"
+            }
+          }
+        }
+      },
+      "401": {
+        "description": "Unauthorized",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/error"
+            },
+            "example": {
+              "error": {
+                "code": "UNAUTHORIZED",
+                "message": "Unauthorized"
+              }
+            }
+          }
+        }
+      },
+      "403": {
+        "description": "Forbidden",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/error"
+            },
+            "example": {
+              "error": {
+                "code": "[SELECTED_PRODUCT_NOT_FOUND, POINT_ID_NOT_FOUND, OS_CODE_NOT_FOUND, DISCONNECTED_USER, VT_ALREADY_OPEN, OUTAGE_OPEN]",
+                "message": "string"
+              }
+            }
+          },
+          "application": {
+            "schema": {
+              "$ref": "#/components/schemas/error"
+            }
+          }
+        }
+      },
+      "404": {
+        "description": "Not Found",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/error"
+            },
+            "example": {
+              "error": {
+                "code": "NOT_FOUND",
+                "message": "The result is empty"
+              }
+            }
+          },
+          "application": {
+            "schema": {
+              "$ref": "#/components/schemas/error"
+            }
+          }
+        }
+      },
+      "500": {
+        "description": "Internal Server Error",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/error"
+            },
+            "example": {
+              "error": {
+                "code": "INTERNAL_SERVER_ERROR",
+                "message": "Internal Server Error"
+              }
+            }
+          },
+          "application": {
+            "schema": {
+              "$ref": "#/components/schemas/error"
+            }
+          }
+        }
+      },
+      "503": {
+        "description": "Service unavailable",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/error"
+            },
+            "example": {
+              "error": {
+                "code": "SERVICE_UNAVAILABLE",
+                "message": "Service Unavailable"
+              }
+            }
+          },
+          "application": {
+            "schema": {
+              "$ref": "#/components/schemas/error"
+            }
+          }
+        }
+      }
+    }
+  }
+}
