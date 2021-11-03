@@ -1,0 +1,1242 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "API Service Order",
+    "description": "API responsável por criar, consultar e agendar ordens de serviço <table><thead><tr><th>Versão</th><th>Elaborado por</th><th>Data</th><th>Alterações</th></tr></thead><tbody><tr><td>1.0.0</td><td>Marcos Maciel</td><td>2021-11-03</td><td>[MCR Atendimento Técnico] Versão Inicial</td></tr></tbody></table>",
+    "version": "1;2021-11-03",
+    "x-claro-domains": [
+      "Customer",
+      "Service Inventory"
+    ]
+  },
+  "servers": [
+    {
+      "url": "https://api-lab.claro.com.br/residential/api/v1/service/order",
+      "description": "lab"
+    },
+    {
+      "url": "https://api-homolog.claro.com.br/residential/api/v1/service/order",
+      "description": "hml"
+    },
+    {
+      "url": "https://api.claro.com.br/residential/api/v1/service/order",
+      "description": "prod"
+    }
+  ],
+  "tags": [
+    {
+      "name": "order-reason-controller",
+      "description": "Order Reason Controller"
+    },
+    {
+      "name": "service-order-controller",
+      "description": "Service Order Controller"
+    },
+    {
+      "name": "service-window-controller",
+      "description": "Service Window Controller"
+    },
+    {
+      "name": "schedule-order-controller",
+      "description": "Schedule Order Controller"
+    }
+  ],
+  "paths": {
+    "/": {
+      "post": {
+        "tags": [
+          "service-order-controller"
+        ],
+        "summary": "Cria uma order serviço utilizando o código do motivo e possibilita o agendamento da ordem de serviço depois de criada caso informado os detalhes de agendamento no request. Backends: Contract Identifier Products V2, SubscriberRequests, AgendarVisitaTecnicaCasada, AgendaOS12V1, GerarProtocoloAtendimento12",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "operationId": "createUsingPOST",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ServiceOrderShort"
+              }
+            }
+          },
+          "description": "<h1>Criação de Ordem de serviço</h1> <p>A criação de uma nova ordem de serviço pode ser realizada passando as informações da <strong>schedule</strong> ou não, essas informações vão servir para já agendar a OS após ela criada, caso essas informações não venham preenchidas a OS vai ser criada porém sem um agendamento.</p>",
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Accepted  <p> Caso não seja venha a informação <strong>schedule</strong> no request, o <strong>protocol</strong> ira vir como null no response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceOrderResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request  <ul> <li><strong>REASON_NOT_OPEN_OS</strong> - O motivo selecionado não permite abertura de OS</li> <li><strong>REASON_NOT_FOUND</strong> - O motivo selecionado não foi encontrado</li> <li><strong>DIAGNOSTIC_REQUIRED</strong> - Se OS é manutenção, os campos do diagnosticos são obrigatórios</li> <li><strong>OS_CODE_NOT_FOUND</strong> - Não foi encontrado o código da OS</li> <li><strong>SELECTED_PRODUCT_NOT_FOUND</strong> - Usuário não tem o produto selecionado</li> </ul>",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error"
+                },
+                "example": {
+                  "error": {
+                    "code": "[REASON_NOT_OPEN_OS, REASON_NOT_FOUND, DIAGNOSTIC_REQUIRED, OS_CODE_NOT_FOUND,SELECTED_PRODUCT_NOT_FOUND]",
+                    "message": "string"
+                  }
+                }
+              },
+              "application": {
+                "schema": {
+                  "$ref": "#/components/schemas/error"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "description": "Forbidden  <ul> <li><strong>VT_ALREADY_OPEN</strong> - Já existe uma VT aberta</li> <li><strong>OUTAGE_OPEN</strong> - Usuário tem uma suspeita de outage aberto</li> <li><strong>DISCONNECTED_USER</strong> - Usuário desconectado</li> </ul>",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error"
+                },
+                "example": {
+                  "error": {
+                    "code": "[VT_ALREADY_OPEN,OUTAGE_OPEN,DISCONNECTED_USER]",
+                    "message": "string"
+                  }
+                }
+              },
+              "application": {
+                "schema": {
+                  "$ref": "#/components/schemas/error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found  <ul> <li><strong>OS_CODE_NOT_FOUND</strong> - Código da OS não encontrado</li> </ul>",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error"
+                },
+                "example": {
+                  "error": {
+                    "code": "[OS_CODE_NOT_FOUND]",
+                    "message": "string"
+                  }
+                }
+              },
+              "application": {
+                "schema": {
+                  "$ref": "#/components/schemas/error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity  <ul> <li><strong>POINT_ID_NOT_FOUND</strong> - Não foi possivel buscar o ponto</li> </ul>",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error"
+                },
+                "example": {
+                  "error": {
+                    "code": "[POINT_ID_NOT_FOUND]",
+                    "message": "string"
+                  }
+                }
+              },
+              "application": {
+                "schema": {
+                  "$ref": "#/components/schemas/error"
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/all": {
+      "get": {
+        "tags": [
+          "service-order-controller"
+        ],
+        "summary": "Retorna uma lista com todas as ordens de serviço abertas (agendadas ou não) para o contrato. Backends: AgendarVisitaTecnicaCasada, IdentificacaoOperadoraNET12V1",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "operationId": "getAllUsingGET",
+        "responses": {
+          "202": {
+            "description": "Accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ServiceOrder"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "description": "Forbidden  <ul> <li><strong>DISCONNECTED_USER</strong> - Usuário desconectado</li> </ul>",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error"
+                },
+                "example": {
+                  "error": {
+                    "code": "DISCONNECTED_USER",
+                    "message": "string"
+                  }
+                }
+              },
+              "application": {
+                "schema": {
+                  "$ref": "#/components/schemas/error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error"
+                },
+                "example": {
+                  "error": {
+                    "code": "500",
+                    "message": "Não foi possível buscar as Visitas técnicas"
+                  }
+                }
+              },
+              "application": {
+                "schema": {
+                  "$ref": "#/components/schemas/error"
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/direct": {
+      "post": {
+        "tags": [
+          "service-order-controller"
+        ],
+        "summary": "Cria uma order serviço direta utilizando o código da ordem de serviço sem passar pelas validações de motivo. Este serviço é utilizado pelo APP do técnico. Backends: Contract Identifier Products V2, SubscriberRequests, AgendarVisitaTecnicaCasada, AgendaOS12V1, GerarProtocoloAtendimento12",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "operationId": "createDirectUsingPOST",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ServiceOrder"
+              }
+            }
+          },
+          "description": "serviceOrder",
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceOrderResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request  <ul>               <li><strong>OS_CODE_NOT_FOUND</strong> - Não foi encontrado o código da OS</li> <li><strong>SELECTED_PRODUCT_NOT_FOUND</strong> - Usuário não tem o produto selecionado</li> </ul>",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error"
+                },
+                "example": {
+                  "error": {
+                    "code": "[OS_CODE_NOT_FOUND,SELECTED_PRODUCT_NOT_FOUND]",
+                    "message": "string"
+                  }
+                }
+              },
+              "application": {
+                "schema": {
+                  "$ref": "#/components/schemas/error"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "description": "Forbidden  <ul> <li><strong>VT_ALREADY_OPEN</strong> - Já existe uma VT aberta</li> <li><strong>OUTAGE_OPEN</strong> - Usuário tem uma suspeita de outage aberto</li> <li><strong>DISCONNECTED_USER</strong> - Usuário desconectado</li> </ul>",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error"
+                },
+                "example": {
+                  "error": {
+                    "code": "[VT_ALREADY_OPEN,OUTAGE_OPEN,DISCONNECTED_USER]",
+                    "message": "string"
+                  }
+                }
+              },
+              "application": {
+                "schema": {
+                  "$ref": "#/components/schemas/error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found  <ul> <li><strong>OS_CODE_NOT_FOUND</strong> - Código da OS não encontrado</li> </ul>",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error"
+                },
+                "example": {
+                  "error": {
+                    "code": "[OS_CODE_NOT_FOUND]",
+                    "message": "string"
+                  }
+                }
+              },
+              "application": {
+                "schema": {
+                  "$ref": "#/components/schemas/error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity  <ul> <li><strong>POINT_ID_NOT_FOUND</strong> - Não foi possivel buscar o ponto</li> </ul>",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error"
+                },
+                "example": {
+                  "error": {
+                    "code": "[POINT_ID_NOT_FOUND]",
+                    "message": "string"
+                  }
+                }
+              },
+              "application": {
+                "schema": {
+                  "$ref": "#/components/schemas/error"
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/history": {
+      "get": {
+        "tags": [
+          "service-order-controller"
+        ],
+        "summary": "Possibilita consultar todas as ordens de serviço finalizadas ou canceladas em um periodo de até 30 dias. Backends: WorkorderSchedules, ContactRecords",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "operationId": "getHistoryUsingGET",
+        "responses": {
+          "202": {
+            "description": "Accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/HistoryVT"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/reason/{productType}": {
+      "get": {
+        "tags": [
+          "order-reason-controller"
+        ],
+        "summary": "Retorna uma lista de motivos que podem indicar problemas que o cliente possa estar enfrentando. Os motivos também tem vinculado o código da ordem de serviço e também o proximo passo que vai ser executado caso o motivo seja selecionado, como o autodiagnostico por exemplo. Backend: DynamoDB",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "operationId": "getReasonsUsingGET",
+        "parameters": [
+          {
+            "name": "productType",
+            "in": "path",
+            "description": "productType",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "NET VIRTUA",
+                "NET TV",
+                "NET FONE",
+                "CELULAR",
+                "SERVICOS_ADICIONAIS",
+                "NOW",
+                "STREAMBOX",
+                "OTHER"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/OrderReason"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "404": {
+            "description": "Not found  <ul> <li><strong>SERVICE_EMPTY_MESSAGE</strong> - O erro ocorre quando a lista de reason retornar vazia</li>                           </ul>",
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": {
+                    "code": "SERVICE_EMPTY_MESSAGE",
+                    "message": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/window/{code}": {
+      "get": {
+        "tags": [
+          "service-window-controller"
+        ],
+        "summary": "Possibilita a consulta de agenda disponível para uma ordem de serviço criada ou pelo tipo da ordem de serviço retornando períodos em D+7. Backend: DisponibilidadePeriodo12V2",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "operationId": "findAvailablePeriodTechProblemUsingGET",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "description": "Esse campo pode receber o código da ordem de serviço ou o id do motivo do problema.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "consultType",
+            "in": "query",
+            "description": "<strong>OS_CODE - </strong> Realiza a busca de agendas pelo código da ordem do serviço<br/><br/> <strong>REASON_CODE - </strong> Realiza a busca de agendas pelo id do motivo <br/><br/> Caso não seja informado esse parametro fica assumido como default <strong>OS_CODE</strong>",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Schedule"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "404": {
+            "description": "Not found  <ul> <li><strong>NO_SCHEDULE</strong> - Não existe agendamentos disponíveis para esta OS</li> </ul>",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error"
+                },
+                "example": {
+                  "error": {
+                    "code": "PROTOCOL_ERROR",
+                    "message": "string"
+                  }
+                }
+              },
+              "application": {
+                "schema": {
+                  "$ref": "#/components/schemas/error"
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/{osCode}": {
+      "delete": {
+        "tags": [
+          "service-order-controller"
+        ],
+        "summary": "Realiza o cancelamento de uma ordem de serviço criada e agendada desde que o tipo da OS aberta permita o cancelamento. Backends: WorkorderSchedules",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "operationId": "cancelUsingDELETE",
+        "parameters": [
+          {
+            "name": "osCode",
+            "in": "path",
+            "description": "osCode",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Protocol"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request  <ul> <li><strong>NOT_CANCELABLE</strong> - A OS não é cancelavel</li> </ul>",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error"
+                },
+                "example": {
+                  "error": {
+                    "code": "NOT_CANCELABLE",
+                    "message": "string"
+                  }
+                }
+              },
+              "application": {
+                "schema": {
+                  "$ref": "#/components/schemas/error"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "500": {
+            "description": "Internal Server Error <ul> <li><strong>PROTOCOL_ERROR</strong> - Não foi possível gerar protocolo</li> </ul>",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error"
+                },
+                "example": {
+                  "error": {
+                    "code": "PROTOCOL_ERROR",
+                    "message": "string"
+                  }
+                }
+              },
+              "application": {
+                "schema": {
+                  "$ref": "#/components/schemas/error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable <ul> <li><strong>CANCEL_ERROR</strong> - Não foi possível cancelar a OS</li> </ul>",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error"
+                },
+                "example": {
+                  "error": {
+                    "code": "CANCEL_ERROR",
+                    "message": "string"
+                  }
+                }
+              },
+              "application": {
+                "schema": {
+                  "$ref": "#/components/schemas/error"
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/{osCode}/schedule": {
+      "post": {
+        "tags": [
+          "schedule-order-controller"
+        ],
+        "summary": "Possibilita o agendamento de uma ordem de serviço já criada porém não agendada. Backends: WorkorderSchedule, DisponibilidadePeriodo12V1",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "operationId": "scheduleUsingPOST",
+        "parameters": [
+          {
+            "name": "osCode",
+            "in": "path",
+            "description": "osCode",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ScheduleIteration"
+        },
+        "responses": {
+          "202": {
+            "description": "Accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Protocol"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": {
+                    "code": "VT não é possível agendar por esse canal",
+                    "message": "string"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": {
+                    "code": "Not found",
+                    "message": "Nenhuma Visita técnica foi encontrada"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "deprecated": false
+      },
+      "put": {
+        "tags": [
+          "schedule-order-controller"
+        ],
+        "summary": "Possibilita o reagendamento de uma ordem de serviço já criada e agendada. Backends: WorkorderSchedule, DisponibilidadePeriodo12V1",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "operationId": "rescheduleUsingPUT",
+        "parameters": [
+          {
+            "name": "osCode",
+            "in": "path",
+            "description": "osCode",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ScheduleIteration"
+        },
+        "responses": {
+          "202": {
+            "description": "Accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Protocol"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": {
+                    "code": "VT não é possível agendar por esse canal",
+                    "message": "string"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": {
+                    "code": "Not found",
+                    "message": "Nenhuma Visita técnica foi encontrada"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "deprecated": false
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-client-key"
+      }
+    },
+    "requestBodies": {
+      "ScheduleIteration": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ScheduleIteration"
+            }
+          }
+        },
+        "description": "scheduleIteration",
+        "required": true
+      }
+    },
+    "schemas": {
+      "HistoryVT": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "codeType": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "group": {
+            "type": "string"
+          },
+          "isIE": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "string"
+          },
+          "terminationDate": {
+            "type": "string"
+          }
+        },
+        "title": "HistoryVT"
+      },
+      "OrderReason": {
+        "type": "object",
+        "properties": {
+          "codOs": {
+            "type": "string"
+          },
+          "cost": {
+            "type": "number"
+          },
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "nextStep": {
+            "type": "string"
+          },
+          "product": {
+            "type": "string",
+            "enum": [
+              "NET VIRTUA",
+              "NET TV",
+              "NET FONE",
+              "CELULAR",
+              "SERVICOS_ADICIONAIS",
+              "NOW",
+              "STREAMBOX",
+              "OTHER"
+            ]
+          },
+          "reason": {
+            "type": "string"
+          }
+        },
+        "title": "OrderReason"
+      },
+      "Protocol": {
+        "type": "object",
+        "properties": {
+          "call": {
+            "type": "string",
+            "description": "protocol call"
+          },
+          "number": {
+            "type": "string",
+            "description": "protocol number"
+          }
+        },
+        "title": "Protocol"
+      },
+      "Schedule": {
+        "type": "object",
+        "properties": {
+          "dateFriendly": {
+            "type": "string"
+          },
+          "schedulePeriod": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SchedulePeriod"
+            }
+          }
+        },
+        "title": "Schedule"
+      },
+      "ScheduleIteration": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "description": "date for window"
+          },
+          "endHour": {
+            "type": "string",
+            "description": "End window"
+          },
+          "maxPeriodExcedent": {
+            "type": "boolean",
+            "description": "max period excedent"
+          },
+          "periodType": {
+            "type": "integer",
+            "format": "int32",
+            "description": "period type"
+          },
+          "startHour": {
+            "type": "string",
+            "description": "start window"
+          }
+        },
+        "title": "ScheduleIteration"
+      },
+      "SchedulePeriod": {
+        "type": "object",
+        "properties": {
+          "hourBegin": {
+            "type": "string",
+            "example": 660,
+            "description": "Begin hour"
+          },
+          "hourEnd": {
+            "type": "string",
+            "example": 840,
+            "description": "End hour"
+          },
+          "maxPeriodExceeded": {
+            "type": "boolean",
+            "description": "SLA was exceeded"
+          },
+          "typeId": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Type of window",
+            "example": 273
+          }
+        },
+        "title": "SchedulePeriod"
+      },
+      "ServiceOrder": {
+        "type": "object",
+        "properties": {
+          "allowOpenNewVT": {
+            "type": "boolean",
+            "description": "os allow open new OS",
+            "example": false
+          },
+          "code": {
+            "type": "string",
+            "description": "Os code",
+            "example": "2080562573"
+          },
+          "codeType": {
+            "type": "integer",
+            "format": "int64",
+            "description": "os's code",
+            "example": 79
+          },
+          "description": {
+            "type": "string",
+            "description": "Os description",
+            "example": "DESCONEXAO OPCAO C/ RETIRADA DE EQUIPAMENTO"
+          },
+          "group": {
+            "type": "string",
+            "description": "Os group",
+            "example": "SERVIÇO"
+          },
+          "isCancelable": {
+            "type": "boolean",
+            "description": "Os is cancelable"
+          },
+          "isIE": {
+            "type": "boolean",
+            "description": "os is isIE",
+            "example": false
+          },
+          "isReschedulable": {
+            "type": "boolean",
+            "description": "Os is reschedulable"
+          },
+          "observation": {
+            "type": "string",
+            "description": "OS's observation"
+          },
+          "product": {
+            "type": "string",
+            "description": "product selected",
+            "enum": [
+              "NET VIRTUA",
+              "NET TV",
+              "NET FONE",
+              "CELULAR",
+              "SERVICOS_ADICIONAIS",
+              "NOW",
+              "STREAMBOX",
+              "OTHER"
+            ]
+          },
+          "reasonDescription": {
+            "type": "string",
+            "description": "Reason descriptions",
+            "example": "Preciso de um novo controle remoto"
+          },
+          "reasonId": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Reason id",
+            "example": 10
+          },
+          "status": {
+            "type": "string",
+            "description": "Os status",
+            "example": "AGENDADA"
+          },
+          "technicianInformation": {
+            "$ref": "#/components/schemas/TechnicianInformation"
+          },
+          "type": {
+            "type": "string",
+            "description": "occurrenceType",
+            "enum": [
+              "IE",
+              "VT"
+            ]
+          },
+          "windowBegin": {
+            "type": "string",
+            "description": "os window begin",
+            "example": "27-10-2020 20:00:00"
+          },
+          "windowEnd": {
+            "type": "string",
+            "description": "os window end",
+            "example": "27-10-2020 23:00:00"
+          }
+        },
+        "title": "ServiceOrder"
+      },
+      "ServiceOrderResponse": {
+        "type": "object",
+        "properties": {
+          "codeOs": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "IE",
+              "VT"
+            ]
+          },
+          "protocol": {
+            "$ref": "#/components/schemas/Protocol"
+          }
+        },
+        "title": "ServiceOrderResponse"
+      },
+      "ServiceOrderShort": {
+        "type": "object",
+        "properties": {
+          "diagnosticCode": {
+            "type": "string",
+            "description": "diagnostic code returned"
+          },
+          "diagosticType": {
+            "type": "string",
+            "description": "diagnostic type returned"
+          },
+          "directVT": {
+            "type": "boolean",
+            "description": "is direct VT"
+          },
+          "reason": {
+            "type": "string",
+            "description": "Reason selected"
+          },
+          "schedule": {
+            "$ref": "#/components/schemas/ScheduleIteration"
+          }
+        },
+        "example": {
+          "reason": "19",
+          "diagnosticType": "MULTI_PARAMETRO",
+          "diagnosticCode": "0000",
+          "directVt": "false,",
+          "schedule": {
+            "date": "01-11-2021",
+            "endHour": "11:00",
+            "maxPeriodExcedent": true,
+            "periodType": "261,",
+            "startHour": "08:00"
+          }
+        },
+        "title": "ServiceOrderShort"
+      },
+      "TechnicianInformation": {
+        "type": "object",
+        "properties": {
+          "documentNumber": {
+            "type": "string",
+            "description": "technican document number"
+          },
+          "name": {
+            "type": "string",
+            "description": "technican name"
+          },
+          "safeVisit": {
+            "type": "string",
+            "description": "safe visit code"
+          }
+        },
+        "title": "TechnicianInformation"
+      },
+      "error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string",
+                "enum": [
+                  "SERVICE_EMPTY_MESSAGE",
+                  "SERVICE_FAIL_MESSAGE",
+                  "NO_SCHEDULE",
+                  "CANCEL_ERROR",
+                  "PROTOCOL_ERROR",
+                  "NOT_CANCELABLE",
+                  "SELECTED_PRODUCT_NOT_FOUND",
+                  "POINT_ID_NOT_FOUND",
+                  "OS_CODE_NOT_FOUND",
+                  "DISCONNECTED_USER",
+                  "VT_ALREADY_OPEN",
+                  "OUTAGE_OPEN",
+                  "REASON_NOT_FOUND",
+                  "REASON_NOT_OPEN_OS",
+                  "DIAGNOSTIC_REQUIRED"
+                ],
+                "description": "Código de erro interno da API"
+              },
+              "message": {
+                "type": "string",
+                "description": "Mensagem de erro"
+              }
+            }
+          }
+        }
+      }
+    },
+    "responses": {
+      "400": {
+        "description": "Bad Request",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/error"
+            }
+          }
+        }
+      },
+      "401": {
+        "description": "Unauthorized",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/error"
+            },
+            "example": {
+              "error": {
+                "code": "UNAUTHORIZED",
+                "message": "Unauthorized"
+              }
+            }
+          }
+        }
+      },
+      "403": {
+        "description": "Forbidden  <ul> <li><strong>SELECTED_PRODUCT_NOT_FOUND</strong> - O erro ocorre quando o usuário não tem o produto selecionado</li> <li><strong>DISCONNECTED_USER</strong> - O erro ocorre quando o usuário não tem permissão para executar a operação pois esta desconectado</li> <li><strong>VT_ALREADY_OPEN</strong> - O erro ocorre quando já existe uma VT aberta para aquele problema ou solicitação</li> <li><strong>OUTAGE_OPEN</strong> - O Erro ocorre o cliente tem um outage aberto</li> </ul>",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/error"
+            },
+            "example": {
+              "error": {
+                "code": "[SELECTED_PRODUCT_NOT_FOUND, DISCONNECTED_USER, VT_ALREADY_OPEN, OUTAGE_OPEN]",
+                "message": "string"
+              }
+            }
+          },
+          "application": {
+            "schema": {
+              "$ref": "#/components/schemas/error"
+            }
+          }
+        }
+      },
+      "500": {
+        "description": "Internal server error <ul><li><strong>SERVICE_FAIL_MESSAGE</strong> - Operação executada com falha</li>",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/error"
+            },
+            "example": {
+              "error": {
+                "code": "SERVICE_FAIL_MESSAGE",
+                "message": "Service Unavailable"
+              }
+            }
+          },
+          "application": {
+            "schema": {
+              "$ref": "#/components/schemas/error"
+            }
+          }
+        }
+      }
+    }
+  }
+}
